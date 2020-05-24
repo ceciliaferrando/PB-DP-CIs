@@ -17,10 +17,11 @@ def plotresults(path, d, mode, epsilon):
     i_dict = {0: "", 1: "_FISHER", 2:"_BASIC" , 3: "_FISHERNP"}
     #j_dict = {0: "50", 1: "100", 2: "200", 3: "300", 4:"400", 5:"500", 6:"750", 7:"1000", 8:"5000", 9:"10000"}
     j_dict = {0: "50", 1: "100", 2: "200", 3:"500", 4:"1000", 5:"5000", 6:"10000"}
+    j_dict = {0: "10", 1: "50", 2: "100", 3:"200", 4:"500", 5:"1000", 6:"5000"}
     #j_dict = {0: "50", 1: "100", 2: "200", 3:"500", 4:"1000", 5:"5000"}
     #j_dict = {0: "50", 1: "100", 2: "500", 3:"1000", 4:"5000", 5:"10000"}
     #j_dict = {0: "50", 1: "100", 2: "500", 3:"1000"}
-    #j_dict = {0: "5", 1: "10", 2: "50", 3:"100"}
+    #j_dict = {0: "5", 1: "10", 2: "50", 3:"100", 4:"200"}
     
     list_ci_levels = [50, 60, 70, 80, 90, 95, 99]
 
@@ -108,7 +109,8 @@ def plotIntervals(path, dist, mode, epsilon):
     
     
     #j_dict = {0: "5", 1: "10", 2: "50", 3:"100", 4:"500", 5:"1000", 6:"5000"}
-    Ns = [50, 100, 200, 500, 1000, 5000, 10000]
+    #Ns = [50, 100, 200, 500, 1000, 5000, 10000]
+    Ns = [10, 50, 100, 200, 500, 1000, 5000]
     #Ns = [5000, 10000]
     true_theta = 4.1692107471768525
     list_ci_levels = [50, 60, 70, 80, 90, 95, 99]
@@ -116,7 +118,7 @@ def plotIntervals(path, dist, mode, epsilon):
     
     methods = ["", "_BASIC"]
     #methods = ["", "_BASIC", "_FISHER", "_FISHERNP"]
-    colors = {"": 'teal', "_FISHER":'lightgreen', "_FISHERNP":'purple', "_BASIC": 'magenta'}
+    colors = {"": 'blue', "_FISHER":'lightgreen', "_FISHERNP":'purple', "_BASIC": 'magenta'}
     offsets = {"": -0.80/4,  "_BASIC": -0.40/4, "_FISHER":+0.40/4, "_FISHERNP":+0.80/4}
     labels = {"": 'private PB', "_FISHER":'private Fisher', "_BASIC": 'public PB', "_FISHERNP":'public Fisher'}
     ms = {}
@@ -153,7 +155,7 @@ def plotIntervals(path, dist, mode, epsilon):
     plt.axhline(y=true_theta, color='black', linestyle='-', label='true parameter')
     for i,method in enumerate(methods):
         print(i, method)
-        draw_dodge(ax.errorbar, ["N = " + str(N) for N in Ns], ms[method], yerr = z_values[70]*sds[method], ax=ax, 
+        draw_dodge(ax.errorbar, ["N=" + str(N) for N in Ns], ms[method], yerr = z_values[70]*sds[method], ax=ax, 
                             dodge=Dodge[i], marker="o", markersize=5, ls='none', color=colors[method], label=labels[method]) 
         # plt.bar(np.array([5,10,50,100]) + offsets[method], means, 0.80, yerr=stdvs*z_values[70], color=colors[method])
         # 
@@ -185,10 +187,13 @@ if __name__ == "__main__":
     plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
     plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-    path = "0522"
+    path = "0523"
     #plotresults(path, 'gaussian', 'empirical', '0.1')
-    #plotresults(path, 'gaussian', 'analytic', '0.1')   
-    plotIntervals(path, 'gaussian', 'analytic', '0.1')
+    d = 'gaussian'
+    plotresults(path, d, 'analytic', '0.5')   
+    plotIntervals(path, d, 'analytic', '0.5')
+    plotresults(path, d, 'empirical', '0.5')   
+    plotIntervals(path, d, 'empirical', '0.5')
 
             
     

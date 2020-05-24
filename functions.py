@@ -1,5 +1,9 @@
 from __future__ import division
-import numpy as np
+#import numpy as np
+
+import autograd.numpy as np
+from autograd import grad, jacobian, hessian
+
 import matplotlib.pyplot as plt
 import argparse
 from scipy.stats import gamma
@@ -82,18 +86,16 @@ def A_SSP(X, Xdistribution, privately_computed_Ds, laplace_noise_scale, theta_ve
         theta_hat_given_z = z
         
         return({'0priv': theta_hat_given_z, '0basic': theta_hat_given_s})
-    
-    if Xdistribution == 'gaussian2':
 
         s1 = 1/N * np.sum(X)
         s2 = 1/(N-1) * np.sum((X-s1)**2)
 
-        z1 = np.random.laplace(loc=s1, scale=privately_computed_Ds/(laplace_noise_scale*0.2), size = 1)
+        z1 = np.random.laplace(loc=s1, scale=privately_computed_Ds/(laplace_noise_scale*0.5), size = 1)
         
         negative = True
         
         while negative:
-            z2 = np.random.laplace(loc=s2, scale=privately_computed_Ds/(laplace_noise_scale*0.8), size = 1)
+            z2 = np.random.laplace(loc=s2, scale=privately_computed_Ds/(laplace_noise_scale*0.5), size = 1)
             if z2>0:
                 negative = False
         
@@ -135,38 +137,74 @@ def A_SSP(X, Xdistribution, privately_computed_Ds, laplace_noise_scale, theta_ve
         
         return({'1priv': theta_hat_given_z, '1basic': theta_hat_given_s})
         
-def fisherInfo(d, N, thetavector):
+def A_SSP_autodiff(X, Xdistribution, privately_computed_Ds, laplace_noise_scale, theta_vector):
+    
+    N = len(X)
+    
+    theta_init = [1.9, 3.9]
+    
+    if Xdistribution == 'poisson':
+
+        s = 1/N * np.sum(X)
+        z = np.random.laplace(loc=s, scale=privately_computed_Ds/laplace_noise_scale, size = 1)
+
+        ll_jac = jacobian(negativeloglikelihood)
+        theta_hat_given_s = minimize(negativeloglikelihood, theta_init, args=(Xdistribution, [s], N), method = 'BFGS', options={'gtol':1e-7,'disp': False}, jac = ll_jac).x[0]
+        theta_hat_given_z = minimize(negativeloglikelihood, theta_init, args=(Xdistribution, z, N), method = 'BFGS', options={'gtol':1e-7,'disp': False}, jac = ll_jac).x[0]
+        
+        return({'0priv': theta_hat_given_z, '0basic': theta_hat_given_s})
+        
+    if Xdistribution == 'gaussian':
+
+        s = 1/N * np.sum(X)
+        
+        
+        z = np.random.laplace(loc=s, scale=privately_computed_Ds/laplace_noise_scale, size = 1)
+
+        theta_hat_given_s = s
+        theta_hat_given_z = z
+        
+        return({'0priv': theta_hat_given_z, '0basic': theta_hat_given_s})
+        
+def fisherInfo(d, N, params):
     
     if d == 'poisson':
-        fishInf = N/thetavector[0]
+        fishInf = N/params[0]
 
     elif d == 'gaussian':
-        fishInf = N/(thetavector[1]**2)
+        fishInf = N/(params[1]**2)
         
     elif d == 'gaussian2':
-        fishInf = np.array([[N/(thetavector[1]**2),0],[0,N/(2*thetavector[1]**4)]])    
+        fishInf = np.array([[N/(params[1]**2),0],[0,N/(2*params[1]**4)]])    
         
     elif d == 'gamma':
-        K = thetavector[1]
-        scale = thetavector[0]
+        K = params[1]
+        scale = params[0]
         fishInf = N*K/(scale**2)
     
     elif d == 'gaussianMV':
-        Sigma = thetavector[1]
+        Sigma = params[1]
         fishInf = N*(np.linalg.inv(Sigma))
         
     return(fishInf)
         
 # functions for numerical optimization
         
-def negativeloglikelihood(theta, suffstat, N):
+def negativeloglikelihood(params, d, suffstat, N):
     #https://en.wikipedia.org/wiki/Poisson_distribution#Parameter_estimation
-    global d
     if d == 'poisson':
+        theta = params[0]
         eta = np.log(theta)
-        Tx = N * suffstat
-        Atheta = theta
-    return(-eta * Tx + N * Atheta)   #didnt include constant
+        Tx = N * suffstat[0]
+        A = theta
+    if d == 'gaussian':
+        theta = params[0]
+        sigma = params[1]
+        eta = theta/(sigma**2)
+        Tx = N * suffstat[0]
+        A = (theta**2)/(2*sigma**2)
+    ll = eta * Tx - N * A
+    return(-1*ll)   #didnt include constant
         
 def optimization(suffstat, N):
     init = 0.5

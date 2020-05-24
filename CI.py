@@ -18,8 +18,10 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         if clip:
             X[X<clipmin] = clipmin
             X[X>clipmax] = clipmax
-        theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0priv']
-        theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0basic']
+        # theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0priv']
+        # theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0basic']
+        theta_priv = A_SSP_autodiff(X, distribution, sensitivity, noise_scale, theta_vector)['0priv']
+        theta_basic = A_SSP_autodiff(X, distribution, sensitivity, noise_scale, theta_vector)['0basic']
         
         #quick fix to avoid negative theta:
         if theta_priv < 0: theta_priv = 0.00000001
@@ -367,7 +369,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Confidence Intervals for Private Estimators')
     
-    parser.add_argument('--d', type=str, default='gaussian2', help='distribution (poisson, gaussian, gamma)')
+    parser.add_argument('--d', type=str, default='poisson', help='distribution (poisson, gaussian, gamma)')
     parser.add_argument('--mode', type=str, default='analytic', help='analytic or empirical (CI mode)')
     parser.add_argument('--e', type=float, default=1.0, help='DP epsilon')
     parser.add_argument('--clip', type=bool, default=True, help='clip data outside bounds')
@@ -377,8 +379,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
 
-    theta = np.random.rand() * 20
-    theta2 = np.random.rand() * 8
+    theta = 0
+    theta2 = 1
+    # theta = np.random.rand() * 20
+    # theta2 = np.random.rand() * 8
     
     # theta = 4
     # theta2 = 3
