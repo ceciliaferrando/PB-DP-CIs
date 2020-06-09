@@ -8,117 +8,15 @@ from scipy.optimize import minimize,fmin_l_bfgs_b
 from functions import *
 
 
-def parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip):
+def parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, rho):
     
     [theta, theta2] = theta_vector
-
-    if distribution == 'poisson':
-        
-        X = np.random.poisson(theta, N)
-        
-        if clip:
-            X[X<clipmin] = clipmin
-            X[X>clipmax] = clipmax
-            
-        theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0priv']
-        theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0basic']
-        
-        #quick fix to avoid negative theta:
-        if theta_priv < 0: theta_priv = 0.00000001
-        if theta_basic < 0: theta_priv = 0.00000001
-        
-        #bootstraps
-        Xbs = np.random.poisson(theta_priv, (N,B))
-        if clip:
-            Xbs[Xbs<clipmin] = clipmin
-            Xbs[Xbs>clipmax] = clipmax
-        theta_tildas = np.random.laplace(loc = 1/N * np.sum(Xbs, axis=0), scale = sensitivity/noise_scale)
-        theta_tildas_naive = 1/N * np.sum(np.random.poisson(theta_priv, (N,B)), axis = 0) 
-        theta_tildas_basic = 1/N * np.sum(np.random.poisson(theta_basic, (N,B)), axis = 0)
-        
-        #fishInf
-        fishInf = fisherInfo(distribution, X, [theta_priv, theta2])
-
-    if distribution == 'gaussian':
-        X = np.random.normal(theta, theta2, N)
-        if clip:
-            X[X<clipmin] = clipmin
-            X[X>clipmax] = clipmax
-        theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0priv']
-        theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0basic']
-
-        
-        #quick fix to avoid negative theta:
-        if theta_priv < 0: theta_priv = 0.00000001
-        if theta_basic < 0: theta_priv = 0.00000001
-
-        #bootstraps
-        Xbs = np.random.normal(theta_priv, theta2, (N,B))     #variance of normal is assumed known, inference of theta 
-        if clip:
-            Xbs[Xbs<clipmin] = clipmin
-            Xbs[Xbs>clipmax] = clipmax
-        theta_tildas = np.random.laplace(loc = 1/N * np.sum(Xbs, axis=0), scale = sensitivity/noise_scale)
-        theta_tildas_naive = 1/N * np.sum(np.random.normal(theta_priv, theta2, (N,B)), axis = 0) 
-        theta_tildas_basic = 1/N * np.sum(np.random.normal(theta_basic, theta2, (N,B)), axis = 0) 
-        
-        #fishInf
-        fishInf = fisherInfo(distribution, X, [theta_priv, theta2])
-        
-    if distribution == 'gaussian2':
-        X = np.random.normal(theta, theta2, N)
-        if clip:
-            X[X<clipmin] = clipmin
-            X[X>clipmax] = clipmax
-        theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0priv']
-        theta2_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['1priv']
-        theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['0basic']
-        theta2_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['1basic']
-        
-        #quick fix to avoid negative theta:
-        if theta_priv < 0: theta_priv = 0.00000001
-        if theta_basic < 0: theta_priv = 0.00000001
-
-        #bootstraps
-        Xbs = np.random.normal(theta_priv, theta2, (N,B))     #variance of normal is assumed known, inference of theta 
-        if clip:
-            Xbs[Xbs<clipmin] = clipmin
-            Xbs[Xbs>clipmax] = clipmax
-        theta_tildas = np.random.laplace(loc = 1/N * np.sum(Xbs, axis=0), scale = sensitivity/noise_scale)
-        theta_tildas_naive = 1/N * np.sum(np.random.normal(theta_priv, theta2, (N,B)), axis = 0) 
-        theta_tildas_basic = 1/N * np.sum(np.random.normal(theta_basic, theta2, (N,B)), axis = 0) 
-        
-        #fishInf
-        fishInf = fisherInfo(distribution, X, [theta_priv, theta2])
-        
-    if distribution == 'gamma':
-        
-        X = np.random.gamma(theta2, theta, N)
-        if clip:
-            X[X<clipmin] = clipmin
-            X[X>clipmax] = clipmax
-        theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['1priv']
-        theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['1basic']
-
-        if theta_priv < 0: theta_priv = 0.00000001
-        if theta_basic < 0: theta_priv = 0.00000001
-
-        #bootstraps
-        Xbs = np.random.gamma(theta2, theta_priv, (N,B))     #theta known, inference on theta2
-        if clip:
-            Xbs[Xbs<clipmin] = clipmin
-            Xbs[Xbs>clipmax] = clipmax
-        theta_tildas = 1/theta2 * np.random.laplace(loc = 1/N * np.sum(Xbs, axis=0), scale = sensitivity/noise_scale)
-        theta_tildas_naive = 1/theta2 * 1/N * np.sum(np.random.gamma(theta2, theta_priv, (N,B)), axis = 0) 
-        theta_tildas_basic = 1/theta2 * 1/N * np.sum(np.random.gamma(theta2, theta_basic, (N,B)), axis = 0) 
-        
-        #fishInf
-        fishInf = fisherInfo(distribution, X, [theta_priv, theta2])
         
     
     if distribution == 'gaussianMV':
         X = np.random.multivariate_normal(theta, theta2, size=N, check_valid = 'warn')
-        theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['1priv']
-        theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector)['1basic']
+        theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector, rho)['1priv']
+        theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector, rho)['1basic']
         
         #bootstraps
         Xbs = np.random.multivariate_normal(theta_priv, theta2, size=(B,N), check_valid = 'warn')  #theta known, inference on theta2
@@ -127,8 +25,10 @@ def parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale,
         theta_tildas_basic =1/N * np.sum(np.random.multivariate_normal(theta_basic, theta2, size=(B,N), check_valid = 'warn'), axis = 1) 
         
         #fishInf
-        fishInf = fisherInfo(distribution, X, [theta_priv, theta2])
-        
+        fishInf = fisherInfo(distribution, len(X), [theta_priv, theta2])
+        fishInfInvSqrt =  np.sqrt(np.linalg.inv(fishInf)[0,0])  
+        fishInfNP = fisherInfo(distribution, N, [theta_basic, theta2])
+        fishInfInvSqrtNP = np.sqrt(np.linalg.inv(fishInfNP)[0,0])  
         
     return(theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInf, theta_priv)
 
@@ -138,7 +38,7 @@ def parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale,
 # CI EXPERIMENT
 ########################################################################################################################    
     
-def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip):
+def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
     
     # get params
     [theta, theta2] = theta_vector
@@ -146,7 +46,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip):
     K = len(theta)
 
     # compute sensitivity pre-privatization
-    sensitivity, [clipmin, clipmax] = measure_sensitivity_private(distribution, N, theta_vector)
+    sensitivity, [clipmin, clipmax] = measure_sensitivity_private(distribution, N, theta_vector, rng)
     
     # be cautious and multiply it by 2 (but later we'll likely change this and can clip values outside bounds
     if not clip: sensitivity = sensitivity*2
@@ -184,7 +84,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip):
             
         for t in range(T):
             
-            theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInf, theta_priv = parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip)
+            theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInf, theta_priv = parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, rho)
             # bootstrap completed, now find statistics based on the theta tilde vectors found via bootstrap
             mu = np.mean(theta_tildas, axis=0)
             std = np.sqrt(np.mean(np.abs(np.subtract(theta_tildas,mu))**2, axis=0))
@@ -212,7 +112,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip):
             
             # find confidence interval bounds
             
-            if mode=='analytic': #this is the standard normal interval method (see Efron-Tibshirani)
+            if mode=='analytic': #standard normal interval 
             
                 CI_lower = mu[0] - z_values[coverage]*std[0] 
                 CI_upper = mu[0] + z_values[coverage]*std[0]
@@ -251,7 +151,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip):
             
                     
             
-            elif mode=='empirical':  #boostrap CIs
+            elif mode=='empirical':  #boostrap percentile CIs 
                 conf_level = coverage
                 alpha = 100-conf_level
                 
@@ -286,7 +186,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip):
                 
                 CI_lower_fish = theta_priv[0] - z_values[coverage]*(np.sqrt(S[0,0]))
                 CI_upper_fish = theta_priv[0] + z_values[coverage]*(np.sqrt(S[0,0]))
-                if theta >= CI_lower_fish and theta <= CI_upper_fish:
+                if theta[0] >= CI_lower_fish and theta[0] <= CI_upper_fish:
                     trial_results_fisher[t,0]=1.0
                 else:
                     if theta[0] < CI_lower_fish: num_lower_failures_fisher += 1
@@ -311,34 +211,27 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip):
     
     print(results)
     print("\n")
-    #print(results_naive)
     print(results_fisher)
-    print("\n")
-    #print(results_basic[0,:])
-    print("\n")
+
     
     #save results
 
     name_suffix = distribution + '_' + 'N'+str(N) + '_' + 'epsilon'+str(noise_scale) + '_' + mode + '.npy'
-    #np.save('coveragelevels_' + name_suffix, list_ci_levels)
     np.save('results_' + name_suffix, results)
     np.save('upperfailures_' + name_suffix, list_upper_failures)
     np.save('lowerfailures_' + name_suffix, list_lower_failures)
     
     name_suffix = distribution + '_' + 'N'+str(N) + '_' + 'epsilon'+str(noise_scale) + '_' + mode + '_NAIVE.npy'
-    #np.save('coveragelevels_' + name_suffix, list_ci_levels)
     np.save('results_' + name_suffix, results_naive)
     np.save('upperfailures_' + name_suffix, list_upper_failures_naive)
     np.save('lowerfailures_' + name_suffix, list_lower_failures_naive)
     
     name_suffix = distribution + '_' + 'N'+str(N) + '_' + 'epsilon'+str(noise_scale) + '_' + mode + '_BASIC.npy'
-    #np.save('coveragelevels_' + name_suffix, list_ci_levels)
     np.save('results_' + name_suffix, results_basic)
     np.save('upperfailures_' + name_suffix, list_upper_failures_basic)
     np.save('lowerfailures_' + name_suffix, list_lower_failures_basic)
     
     name_suffix = distribution + '_' + 'N'+str(N) + '_' + 'epsilon'+str(noise_scale) + '_' + mode + '_FISHER.npy'
-    #np.save('coveragelevels_' + name_suffix, list_ci_levels)
     np.save('results_' + name_suffix, results_fisher)
     np.save('upperfailures_' + name_suffix, list_upper_failures_fisher)
     np.save('lowerfailures_' + name_suffix, list_lower_failures_fisher)
@@ -351,10 +244,14 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Confidence Intervals for Private Estimators')
     
-    parser.add_argument('--d', type=str, default='gaussianMV', help='distribution (poisson, gaussian, gamma)')
-    parser.add_argument('--mode', type=str, default='analytic', help='analytic or empirical (CI mode)')
+    parser.add_argument('--N', type=str, default='small', help='data size')
+    parser.add_argument('--d', type=str, default='gaussianMV', help='distribution (gaussianMV)')
+    parser.add_argument('--mode', type=str, default='empirical', help='analytic or empirical (CI mode)')
     parser.add_argument('--e', type=float, default=0.5, help='DP epsilon')
     parser.add_argument('--clip', type=bool, default=True, help='clip data outside bounds')
+    parser.add_argument('--rng', type=float, default=0.0, help='pre-decided range upperbound (lower will be its negative)')
+    parser.add_argument('--rho', type=float, default=0.85, help='privacy budget split if more than one parameter to privatize')
+    parser.print_help()
     
     parser.print_help()
     
@@ -370,6 +267,13 @@ if __name__ == "__main__":
         theta2 = np.array([[np.random.rand()* 3 for i in range(k)] for j in range(k)])
         theta2 = np.dot(theta2, theta2.T)
         
+
+    if args.N == 'small':
+        Ns = [5, 10, 50, 100, 200, 500, 1000]
+    else:
+        Ns = [5000, 10000]    
     
-    for N in [50,100,200,500,1000,5000,10000]:
-        CIs(args.d, [theta, theta2], N, 500, args.e, args.mode, 500)
+        
+    for N in Ns:
+        print("N =", N)
+        CIs(args.d, [theta, theta2], N, 1000, args.e, args.mode, 2000, args.clip, args.rng, args.rho)
