@@ -188,7 +188,7 @@ def fisherInfo(d, N, params):
 # functions for numerical optimization
         
 def negativeloglikelihood(params, d, suffstat, N):
-    #https://en.wikipedia.org/wiki/Poisson_distribution#Parameter_estimation
+
     if d == 'poisson':
         theta = params[0]
         eta = np.log(theta)

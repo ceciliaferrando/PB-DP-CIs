@@ -43,9 +43,6 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2])
         fishInfInvSqrt = fishInf**(-1/2)
         
-        var_w = 2 * (sensitivity/noise_scale)**2
-        fishInfInvSqrtCorr = np.sqrt(fishInf**(-1) + fishInf**(-2)*var_w)
-        
         fishInfNP = fisherInfo(distribution, N, [theta_basic, theta2])
         fishInfInvSqrtNP = fishInfNP**(-1/2)
 
@@ -73,9 +70,6 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         #fisher information for the fisher CI
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2])
         fishInfInvSqrt = fishInf**(-1/2)
-        
-        var_w = 2 * (sensitivity/noise_scale)**2
-        fishInfInvSqrtCorr = np.sqrt(fishInf**(-1) + fishInf**(-2)*var_w)
         
         fishInfNP = fisherInfo(distribution, N, [theta_basic, theta2])
         fishInfInvSqrtNP = fishInfNP**(-1/2)
@@ -113,9 +107,6 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2_priv])
         fishInfInvSqrt =  np.sqrt(np.linalg.inv(fishInf)[0,0])  
         
-        #var_w = 2 * (sensitivity[0]/noise_scale)**2 
-        fishInfInvSqrtCorr = fishInfInvSqrt
-        
         fishInfNP = fisherInfo(distribution, N, [theta_basic, theta2_basic])
         fishInfInvSqrtNP = np.sqrt(np.linalg.inv(fishInfNP)[0,0])  
         
@@ -150,13 +141,10 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2])
         fishInfInvSqrt = fishInf**(-1/2)
         
-        var_w = 2 * (sensitivity/noise_scale)**2
-        fishInfInvSqrtCorr = np.sqrt(fishInf**(-1) + fishInf**(-2)*var_w)
-        
         fishInfNP = fisherInfo(distribution, N, [theta_basic, theta2])
         fishInfInvSqrtNP = fishInfNP**(-1/2)
         
-    return(theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInfInvSqrt, fishInfInvSqrtCorr, fishInfInvSqrtNP, theta_priv, theta_basic)
+    return(theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInfInvSqrt, fishInfInvSqrtNP, theta_priv, theta_basic)
 
 
     
@@ -184,14 +172,13 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
     # start bootstrap experiment to find CIs
 
     # init data storage
-    results, results_naive, results_basic, results_fisher, results_fisher_corr, results_fisher_np = [], [], [], [], [], []
+    results, results_naive, results_basic, results_fisher, results_fisher_np = [], [], [], [], []
     widths, widths_FI, widths_FI_np = [], [], []
     
     list_upper_failures, list_lower_failures = [],[]
     list_upper_failures_naive, list_lower_failures_naive = [],[]
     list_upper_failures_basic, list_lower_failures_basic  = [],[]
     list_upper_failures_fisher, list_lower_failures_fisher = [],[]
-    list_upper_failures_fisher_corr, list_lower_failures_fisher_corr = [],[]
     list_upper_failures_fisher_np, list_lower_failures_fisher_np = [],[]
     
     z_values = {50: 0.674, 60: 0.841, 70: 1.036, 80: 1.282, 90: 1.645, 95: 1.960, 99: 2.576}
@@ -204,7 +191,6 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
         trial_results_basic = np.zeros((T,3,))
         trial_results_fisher = np.zeros((T,3,))
         trial_results_fisher_np = np.zeros((T,3,))
-        trial_results_fisher_corr = np.zeros((T,3,))
         trial_errors = []
         Rs = np.zeros((T,2))
         Rs_FI = np.zeros((T,2))
@@ -216,15 +202,14 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
         num_upper_failures_basic, num_lower_failures_basic = 0, 0
         num_upper_failures_fisher, num_lower_failures_fisher = 0, 0
         num_upper_failures_fisher_np, num_lower_failures_fisher_np = 0, 0
-        num_upper_failures_fisher_corr, num_lower_failures_fisher_corr = 0, 0
         
         
         #run T confidence interval trials
             
         for t in range(T):
             
-            theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInfInvSqrt, fishInfInvSqrtCorr, fishInfInvSqrtNP, theta_priv, theta_basic = parametricBootstrap(distribution, 
-                                                                                                              N, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, coverage, rho)
+            theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInfInvSqrt, fishInfInvSqrtNP, theta_priv, theta_basic = parametricBootstrap(distribution, 
+                                                                            N, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, coverage, rho)
             
                                                                                                               
             # bootstrap completed, now find statistics based on the bootstrap vectors
@@ -250,9 +235,6 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
             trial_results_fisher[t,1] = theta_priv
             trial_results_fisher[t,2] = fishInfInvSqrt
             
-            trial_results_fisher_corr[t,1] = theta_priv
-            trial_results_fisher_corr[t,2] = fishInfInvSqrtCorr
-            
             trial_results_fisher_np[t,1] = theta_basic
             trial_results_fisher_np[t,2] = fishInfInvSqrtNP
             
@@ -274,20 +256,9 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
 
             R_FI = np.array([CI_lower_fish, CI_upper_fish]).T
             Rs_FI[t,:] = R_FI
+
                 
-            # FISHER INFO CORRECTED
-            error = (theta_priv - theta)**2
-            trial_errors.append([error])
-            CI_lower_fish_corr = theta_priv - z_values[coverage]*(fishInfInvSqrtCorr)
-            CI_upper_fish_corr = theta_priv + z_values[coverage]*(fishInfInvSqrtCorr)
-            if CI_lower_fish_corr<=0 and distribution in ['poisson', 'gamma']: CI_lower_fish_corr = 0.00000001
-            if theta >= CI_lower_fish_corr and theta <= CI_upper_fish_corr:
-                trial_results_fisher_corr[t,0]=1.0
-            else:
-                if theta < CI_lower_fish_corr: num_lower_failures_fisher_corr += 1
-                elif theta > CI_upper_fish_corr: num_upper_failures_fisher_corr += 1
-                
-            # FISHER INFO PUBLIC
+            # FISHER INFO NONPRIVATE
                 
             CI_lower_fish_np = theta_basic - z_values[coverage]*(fishInfInvSqrtNP)
             CI_upper_fish_np = theta_basic + z_values[coverage]*(fishInfInvSqrtNP)
@@ -332,10 +303,9 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
                 
                     
             
-            elif mode=='empirical':  #boostrap CIs
+            elif mode=='empirical':  #boostrap CIs (see Efron-Tibshirani)
                 conf_level = coverage
                 alpha = 100-conf_level
-                
                 CI_upper= np.percentile(theta_tildas, 100-alpha/2.0)
                 CI_lower= np.percentile(theta_tildas, alpha/2.0)
     
@@ -344,18 +314,10 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
                 else:
                     if theta < CI_lower: num_lower_failures += 1
                     elif theta > CI_upper: num_upper_failures += 1
-                    
-                q1 = np.percentile(theta_tildas, alpha/2.0)
-                q2 = np.percentile(theta_tildas, 100-alpha/2.0)
-                
-                diff = q2 - q1
-
-                moe = diff/2
                 
                 R = np.array([CI_lower, CI_upper])
                 Rs[t,:] = R
                 
-      
                 CI_upper_naive = np.percentile(theta_tildas_naive, 100-alpha/2.0)
                 CI_lower_naive = np.percentile(theta_tildas_naive, alpha/2.0)
     
@@ -374,8 +336,8 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
                     if theta < CI_lower_basic: num_lower_failures_basic += 1
                     elif theta > CI_upper_basic: num_upper_failures_basic += 1
 
-    
-        # store results
+        # STORE RESULTS
+        
         widths.append(np.mean(Rs, axis=0))
         widths_FI.append(np.mean(Rs_FI, axis=0))
         widths_FI_np.append(np.mean(Rs_FI_np, axis=0))
@@ -384,7 +346,6 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
         results_basic.append(np.mean(trial_results_basic, axis=0))
         results_fisher.append(np.mean(trial_results_fisher, axis=0))
         results_fisher_np.append(np.mean(trial_results_fisher_np, axis=0))
-        results_fisher_corr.append(np.mean(trial_results_fisher_corr, axis=0))
         
         list_upper_failures.append(num_upper_failures)
         list_lower_failures.append(num_lower_failures)
@@ -396,8 +357,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
         list_lower_failures_fisher.append(num_lower_failures_fisher)
         list_upper_failures_fisher_np.append(num_upper_failures_fisher_np)
         list_lower_failures_fisher_np.append(num_lower_failures_fisher_np)
-        list_upper_failures_fisher_corr.append(num_upper_failures_fisher_corr)
-        list_lower_failures_fisher_corr.append(num_lower_failures_fisher_corr)
+
     
     print("widths", widths)
     print("\n")
@@ -414,11 +374,8 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
     print("Fisher Information non-private:")
     print([a[0] for a in results_fisher_np])
     print("\n")
-    # print("Fisher Information corrected:")
-    # print([a[0] for a in results_fisher_corr])
-    # print("\n")
     
-    #save results
+    # SAVE RESULTS
 
     name_suffix = distribution + '_' + 'N'+str(N) + '_' + 'epsilon'+str(noise_scale) + '_' + mode + '.npy'
     np.save('results_' + name_suffix, results)
@@ -448,21 +405,17 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
     np.save('lowerfailures_' + name_suffix, list_lower_failures_fisher_np)
     np.save('widths_' + name_suffix, widths_FI_np)
     
-    name_suffix = distribution + '_' + 'N'+str(N) + '_' + 'epsilon'+str(noise_scale) + '_' + mode + '_FISHERCORR.npy'
-    np.save('results_' + name_suffix, results_fisher_corr)
-    np.save('upperfailures_' + name_suffix, list_upper_failures_fisher_corr)
-    np.save('lowerfailures_' + name_suffix, list_lower_failures_fisher_corr)
 
-        
-    
-    
+  
 if __name__ == "__main__":
     
     np.random.seed(22)
     
     parser = argparse.ArgumentParser(description='Confidence Intervals for Private Estimators')
     
-    parser.add_argument('--N', type=int, default=100, help='data size')
+    parser.add_argument('--N', type=int, default=1000, help='data size')
+    parser.add_argument('--theta', type=float, default=np.random.rand() * 20, help='parameter1')
+    parser.add_argument('--theta2', type=float, default=np.random.rand() * 8, help='parameter2, if any')
     parser.add_argument('--d', type=str, default='gaussian', help='distribution (poisson, gaussian, gamma, gaussian2)')
     parser.add_argument('--mode', type=str, default='empirical', help='analytic or empirical (CI mode)')
     parser.add_argument('--e', type=float, default=0.5, help='DP epsilon')
@@ -472,9 +425,5 @@ if __name__ == "__main__":
     parser.print_help()
     
     args = parser.parse_args()
-    
-    theta = np.random.rand() * 20
-    theta2 = np.random.rand() * 8
 
-
-    CIs(args.d, [theta, theta2], args.N, 1000, args.e, args.mode, 2000, args.clip, args.rng, args.rho)
+    CIs(args.d, [args.theta, args.theta2], args.N, 1000, args.e, args.mode, 2000, args.clip, args.rng, args.rho)
