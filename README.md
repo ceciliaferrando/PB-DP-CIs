@@ -19,6 +19,10 @@ To reproduce the experiments:
 
 --N	[int] data size
 
+--theta	[float] first parameter (manually set to parameter vector if using multivariate version 'CImv.py')
+
+--theta2 [float] second parameter, if any (manually set to parameter vector if using multivariate version 'CImv.py')
+
 --d	[str] distribution:
 		'poisson' -> Poisson 
 		'gaussian' -> Gaussian of known variance
