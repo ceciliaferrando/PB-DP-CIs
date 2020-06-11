@@ -137,7 +137,6 @@ def plotresultsUpLow(path, d, mode, epsilon):
     #j_dict = {0: "10", 1: "50", 2: "100", 3:"500", 4:"1000"}
     #j_dict = {0: "10", 1: "50", 2: "100", 3:"500", 4:"1000", 5:"5000", 6:"10000"}
     j_dict = {0:"50", 1: "100", 2:"500", 3:"1000", 4:"5000", 5:"10000"}
-    #j_dict = {0:"50", 1: "100", 2:"500", 3:"1000", 4:"5000"}
     #j_dict = {0: "2", 1: "5", 2: "10", 3:"50"}
     colorsUp = {"": 'blue', "_FISHER":'orange', "_FISHERNP":'red', "_BASIC": 'red'}
     colorsLow = {"": 'blue', "_FISHER":'orange', "_FISHERNP":'red', "_BASIC": 'red'}
@@ -406,7 +405,7 @@ if __name__ == "__main__":
     plt.rc('legend', fontsize=SMALL_SIZE)   
     plt.rc('figure', titlesize=BIGGER_SIZE)  
 
-    path = "0609_gamma_trunc_2xbis"
+    path = ""
     d = 'gamma'
     eps = '0.5'
     trueparam = 4.1692107471768525
