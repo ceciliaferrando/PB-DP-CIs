@@ -10,6 +10,7 @@ Scripts:
 	- "functions.py": helper functions, including sensitivity and privatization mechanisms
 	- "plot.py": visualization functions to plot the CI results of a specific distribution
 			(designed to compare results for N = [50, 100, 500, 1000, 5000, 10000])
+	- "barplot.py": plot function to compare private CI width across methods
 		
 Requirements:
 	
