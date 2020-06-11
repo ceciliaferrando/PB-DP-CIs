@@ -8,10 +8,10 @@ from scipy.optimize import minimize,fmin_l_bfgs_b
 from functions import *
 
 
-def parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, rho):
+def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, rho):
     
     [theta, theta2] = theta_vector
-        
+
     
     if distribution == 'gaussianMV':
         X = np.random.multivariate_normal(theta, theta2, size=N, check_valid = 'warn')
@@ -84,7 +84,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, clip, rng, rho):
             
         for t in range(T):
             
-            theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInf, theta_priv = parametricBootstrap(distribution, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, rho)
+            theta_tildas, theta_tildas_naive, theta_tildas_basic, fishInf, theta_priv = parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, rho)
             # bootstrap completed, now find statistics based on the theta tilde vectors found via bootstrap
             mu = np.mean(theta_tildas, axis=0)
             std = np.sqrt(np.mean(np.abs(np.subtract(theta_tildas,mu))**2, axis=0))
@@ -242,9 +242,9 @@ if __name__ == "__main__":
     
     np.random.seed(22)
     
-    parser = argparse.ArgumentParser(description='Confidence Intervals for Private Estimators')
+    parser = argparse.ArgumentParser(description='Confidence Intervals for Private Estimators, Multivariate Gaussian')
     
-    parser.add_argument('--N', type=str, default='small', help='data size')
+    parser.add_argument('--N', type=int, default=100, help='data size')
     parser.add_argument('--d', type=str, default='gaussianMV', help='distribution (gaussianMV)')
     parser.add_argument('--mode', type=str, default='empirical', help='analytic or empirical (CI mode)')
     parser.add_argument('--e', type=float, default=0.5, help='DP epsilon')
@@ -257,23 +257,10 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    if args.d in ['gaussian', 'poisson', 'gamma', 'gaussian2']:
-        theta = np.random.rand() * 20
-        theta2 = np.random.rand() * 8
+    #multivariate gaussian
+    k = 5
+    theta = np.array([np.random.rand() * 20 for i in range(k)])
+    theta2 = np.array([[np.random.rand()* 3 for i in range(k)] for j in range(k)])
+    theta2 = np.dot(theta2, theta2.T)
         
-    else:
-        k = 5
-        theta = np.array([np.random.rand() * 20 for i in range(k)])
-        theta2 = np.array([[np.random.rand()* 3 for i in range(k)] for j in range(k)])
-        theta2 = np.dot(theta2, theta2.T)
-        
-
-    if args.N == 'small':
-        Ns = [5, 10, 50, 100, 200, 500, 1000]
-    else:
-        Ns = [5000, 10000]    
-    
-        
-    for N in Ns:
-        print("N =", N)
-        CIs(args.d, [theta, theta2], N, 1000, args.e, args.mode, 2000, args.clip, args.rng, args.rho)
+    CIs(args.d, [theta, theta2], args.N, 1000, args.e, args.mode, 2000, args.clip, args.rng, args.rho)
