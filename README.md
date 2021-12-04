@@ -5,8 +5,9 @@
 
 Scripts:
 
-	- "CI.py": main Python functions and driver to run confidence interval experiments
-	- "CImv.py": multivariate version of Gaussian of known variance (analysis on dim 0)
+	- "DPCIs-expfam.py": main Python functions and driver to run confidence interval experiments
+	- "DPCIs-expfam-mv.py": multivariate version of Gaussian of known variance (analysis on dim 0)
+	- "DPCIs-OLS.py": main Python functions and driver to run confidence interval experiments for OLS
 	- "functions.py": helper functions, including sensitivity and privatization mechanisms
 	- "plot.py": visualization functions to plot the CI results of a specific distribution
 			(designed to compare results for N = [50, 100, 500, 1000, 5000, 10000])
@@ -55,7 +56,7 @@ To reproduce the experiments:
 			(1-rho will be allocated to privatize the other parameter)
 	
 	
-	2) run "CI.py" with choice of experiment parameters
+	2) run driver with choice of experiment parameters
 	
 	3) results will be saved in .npy
 
