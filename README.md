@@ -1,4 +1,4 @@
-"General-Purpose Differentially-Private Confidence Intervals"
+"Parametric Bootstrap Differentially-Private Confidence Intervals"
 
 
 #############################################################
@@ -19,7 +19,7 @@ Requirements:
 
 #############################################################
 
-To reproduce the experiments:
+To reproduce the experiments (example for DPCIs for exponential families):
 
 	1) choose experiment parameters:
 	
@@ -59,18 +59,3 @@ To reproduce the experiments:
 	2) run driver with choice of experiment parameters
 	
 	3) results will be saved in .npy
-
-#############################################################
-
-To visualize the results:
-
-	1) Run "plot.py" with the following parameters
-			path -> folder containing the .npy files from the experiment
-			d -> string representing the distribution of interest
-			eps -> string representing the value of privacy parameter epsilon of interest
-		(multiple plot types available, uncomment plot of interest in main call)
-	
-	2) the code will output a) a coverage analysis plot for different CI methods, and b) a
-		visualization of the CIs for different CI methods
-
-##############################################################
