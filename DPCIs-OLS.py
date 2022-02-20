@@ -242,7 +242,6 @@ parser.add_argument('--bound_beta', type=float, default=10.0, help='bound on bet
 parser.add_argument('--z_score', type=float, default=1.96, help='z score associated with confidence level') # 1.96 for 95% confidence level
 parser.add_argument('--num_trials', type=int, default=1000, help='Number of experiments to compute coverage ratio')
 parser.add_argument('--coverage', type=int, default=50, help='The dimension to be looked at')
-
 parser.add_argument('--test_d', type=int, default=2, help='The dimension to be looked at')
 parser.add_argument('--D', type=int, default=4, help='The number of dimensions in the ols problem')
 parser.add_argument('--N', type=int, default=100, help='The number of data points in the ols problem')
