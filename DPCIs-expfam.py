@@ -74,7 +74,9 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         theta_tildas_naive = 1/N * np.sum(np.random.normal(theta_priv, theta2, (N,B)), axis = 0) 
         theta_tildas_basic = 1/N * np.sum(np.random.normal(theta_basic, theta2, (N,B)), axis = 0)
 
-        estimated_bias = None  # to develop
+        # bias quantification
+        e_theta_tilda = np.mean(theta_tildas)
+        estimated_bias = e_theta_tilda - theta_priv
         
         #fisher information for the fisher CI
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2])
