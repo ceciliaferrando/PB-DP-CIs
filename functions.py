@@ -121,7 +121,7 @@ def A_SSP(X, Xdistribution, privately_computed_Ds, laplace_noise_scale, theta_ve
         theta_hat_given_z = z1
         theta2_hat_given_z = np.sqrt(np.pi/2) * max(0.00000001, z2)
 
-        return({'0priv': theta_hat_given_z, '1priv': theta2_hat_given_z, '0basic': theta_hat_given_s, '1basic': theta2_hat_given_s})
+        return({'0priv': theta_hat_given_z.item(), '1priv': theta2_hat_given_z.item(), '0basic': theta_hat_given_s, '1basic': theta2_hat_given_s})
     
     if Xdistribution == 'gamma':
 
@@ -145,34 +145,6 @@ def A_SSP(X, Xdistribution, privately_computed_Ds, laplace_noise_scale, theta_ve
         
         return({'1priv': theta_hat_given_z, '1basic': theta_hat_given_s})
         
-def A_SSP_autodiff(X, Xdistribution, privately_computed_Ds, laplace_noise_scale, theta_vector):
-    
-    N = len(X)
-    
-    theta_init = [1.9, 3.9]
-    
-    if Xdistribution == 'poisson':
-
-        s = 1/N * np.sum(X)
-        z = np.random.laplace(loc=s, scale=privately_computed_Ds/laplace_noise_scale, size = 1)
-
-        ll_jac = jacobian(negativeloglikelihood)
-        theta_hat_given_s = minimize(negativeloglikelihood, theta_init, args=(Xdistribution, [s], N), method = 'BFGS', options={'gtol':1e-7,'disp': False}, jac = ll_jac).x[0]
-        theta_hat_given_z = minimize(negativeloglikelihood, theta_init, args=(Xdistribution, z, N), method = 'BFGS', options={'gtol':1e-7,'disp': False}, jac = ll_jac).x[0]
-        
-        return({'0priv': theta_hat_given_z, '0basic': theta_hat_given_s})
-        
-    if Xdistribution == 'gaussian':
-
-        s = 1/N * np.sum(X)
-        
-        
-        z = np.random.laplace(loc=s, scale=privately_computed_Ds/laplace_noise_scale, size = 1)
-
-        theta_hat_given_s = s
-        theta_hat_given_z = z
-        
-        return({'0priv': theta_hat_given_z, '0basic': theta_hat_given_s})
         
 def fisherInfo(d, N, params):
     
@@ -183,7 +155,7 @@ def fisherInfo(d, N, params):
         fishInf = N/(params[1]**2)
         
     elif d == 'gaussian2':
-        fishInf = np.array([[N/(params[1]**2),0],[0,N/(2*params[1]**4)]], dtype='float')    
+        fishInf = np.array([[N/(params[1]**2),0],[0,N/(2*params[1]**4)]])
         
     elif d == 'gamma':
         K = params[1]
@@ -196,8 +168,6 @@ def fisherInfo(d, N, params):
         
     return(fishInf)
  
- 
-########################################################################################################################       
 # functions for numerical optimization
         
 def negativeloglikelihood(params, d, suffstat, N):
@@ -220,5 +190,4 @@ def optimization(suffstat, N):
     init = 0.5
     out = minimize(negativeloglikelihood, init, args=(suffstat, N), method='BFGS', jac=False, tol=1e-08,  options={'disp': False})
     return(out.x)
-
         
