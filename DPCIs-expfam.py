@@ -9,6 +9,7 @@ import pickle
 from functions import *
 
 
+
 def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_scale, clipmin, clipmax, clip, coverage, rho):
     
     [theta, theta2] = theta_vector
@@ -27,7 +28,7 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         if theta_priv < 0: theta_priv = 0.00000001
         if theta_basic < 0: theta_basic = 0.00000001
         
-        #bootstraps
+        # bootstraps
         Xbs = np.random.poisson(theta_priv, (N,B))
         if clip:
             Xbs[Xbs<clipmin] = clipmin
@@ -45,7 +46,7 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         estimated_bias = e_theta_tilda - theta_priv
         true_bias = theta_priv - theta
 
-        #fisher information for the fisher CI
+        # fisher information for the fisher CI
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2])
         fishInfInvSqrt = fishInf**(-1/2)
         fishInfInvSqrtTildeVec = [fisherInfo(distribution, N, [theta_tilda, theta2]) ** (-1 / 2) for theta_tilda in
@@ -67,7 +68,7 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         theta_priv = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector, rho)['0priv']
         theta_basic = A_SSP(X, distribution, sensitivity, noise_scale, theta_vector, rho)['0basic']
 
-        #bootstraps
+        # bootstraps
         Xbs = np.random.normal(theta_priv, theta2, (N,B))     #variance of normal is assumed known, inference of theta 
         
         if clip:
@@ -82,7 +83,7 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         e_theta_tilda = np.mean(theta_tildas)
         estimated_bias = e_theta_tilda - theta_priv
         
-        #fisher information for the fisher CI
+        # fisher information for the fisher CI
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2])
         fishInfInvSqrt = fishInf**(-1/2)
         fishInfInvSqrtTildeVec = [fisherInfo(distribution, N, [theta_tilda, theta2])**(-1/2) for theta_tilda in theta_tildas]
@@ -112,7 +113,7 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         if theta2_priv < 0: theta2_priv = 0.00000001
         if theta2_basic < 0: theta2_basic = 0.00000001
 
-        #bootstraps
+        # bootstraps
         Xbs = np.random.normal(theta_priv, theta2_priv, (N,B))    #inference on both
         
         if clip:
@@ -123,18 +124,16 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         theta_tildas_naive = 1/N * np.sum(np.random.normal(theta_priv, theta2_priv, (N,B)), axis = 0) 
         theta_tildas_basic = 1/N * np.sum(np.random.normal(theta_basic, theta2_basic, (N,B)), axis = 0)
 
-        #bias quantification
-        estimated_bias = None   #to develop
+        # bias quantification, first parameter
+        e_theta_tilda = np.mean(theta_tildas)
+        estimated_bias = e_theta_tilda - theta_priv
 
-        #fisher information for the fisher CI
+        # fisher information for the fisher CI
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2_priv])
         fishInfInvSqrt = np.sqrt(np.linalg.inv(fishInf)[0,0])
         fishInfInvSqrtTildeVec = [np.sqrt(np.linalg.inv(fisherInfo(distribution, N, [theta_tilda, theta2_priv]))[0,0]) ** (-1 / 2)
                                   for theta_tilda in theta_tildas]
-        print(fishInfInvSqrtTildeVec)
-        print(stop)
         
-        #var_w = 2 * (sensitivity[0]/noise_scale)**2 
         fishInfInvSqrtCorr = fishInfInvSqrt
         
         fishInfNP = fisherInfo(distribution, N, [theta_basic, theta2_basic])
@@ -154,7 +153,7 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         if theta_priv < 0: theta_priv = 0.00000001
         if theta_basic < 0: theta_basic = 0.00000001
 
-        #bootstraps
+        # bootstraps
         Xbs = np.random.gamma(theta2, theta_priv, (N,B))     #theta known, inference on theta2
         if clip:
             Xbs[Xbs<clipmin] = clipmin
@@ -167,11 +166,11 @@ def parametricBootstrap(distribution, N, theta_vector, B, sensitivity, noise_sca
         theta_tildas_naive[theta_tildas_naive<=0] = 0.00000001
         theta_tildas_basic[theta_tildas_basic<=0] = 0.00000001
 
-        #bias quantification
+        # bias quantification
         e_theta_tilda = np.mean(theta_tildas)
         estimated_bias = e_theta_tilda - theta_priv
         
-        #fisher information for the fisher CI
+        # fisher information for the fisher CI
         fishInf = fisherInfo(distribution, N, [theta_priv, theta2])
         fishInfInvSqrt = fishInf**(-1/2)
         fishInfInvSqrtTildeVec = [fisherInfo(distribution, N, [theta_tilda, theta2]) ** (-1 / 2) for theta_tilda in
@@ -201,8 +200,6 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
 
     # compute sensitivity pre-privatization
     sensitivity, [clipmin, clipmax] = measure_sensitivity_private(distribution, N, theta_vector, cliplo, cliphi)
-
-    #clipmax = 10
 
     ############## PRIVACY BOUNDARY ####################################################################################
     # no access to X from here on
@@ -238,8 +235,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
         Rs_FI = np.zeros((T,2))
         Rs_FI_np = np.zeros((T,2))
         trial_estimated_bias = np.zeros((T,))
-        
-        
+              
         num_upper_failures, num_lower_failures = 0, 0
         num_upper_failures_db, num_lower_failures_db = 0, 0
         num_upper_failures_naive, num_lower_failures_naive = 0, 0
@@ -249,7 +245,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
         num_upper_failures_fisher_corr, num_lower_failures_fisher_corr = 0, 0
         
         
-        #run T confidence interval trials
+        # run T confidence interval trials
             
         for t in range(T):
             clip = True
@@ -370,7 +366,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
                 
                     
             
-            elif mode=='empirical':  #boostrap CIs
+            elif mode=='empirical':  # Efron's boostrap CIs
                 conf_level = coverage
                 alpha = 100-conf_level
                 
@@ -502,7 +498,7 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
                     elif theta > CI_upper_basic:
                         num_upper_failures_basic += 1
 
-            elif mode == 'pivotal':  # studentized boostrap CIs
+            elif mode == 'pivotal':  # pivotal boostrap CIs
 
                 conf_level = coverage
                 alpha = 100 - conf_level
@@ -611,25 +607,15 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
         list_upper_failures_fisher_corr.append(num_upper_failures_fisher_corr)
         list_lower_failures_fisher_corr.append(num_lower_failures_fisher_corr)
 
-
+    print("COVERAGE RESULTS for nominal coverage in [50, 60, 70, 80, 90, 95, 99]:")
     print("Private Parametric Bootstrap:")
     print([a[0] for a in results])
     print("Private Parametric Bootstrap De-biased:")
     print([a[0] for a in results_db])
-    # print("\n")
-    # # print("Non-Private Parametric Bootstrap:")
-    # # #print(results_naive)
-    # # print([a[0] for a in results_basic])
-    # print("\n")
     print("Fisher Information with theta private:")
     print([a[0] for a in results_fisher])
-    print("\n")
     print("Fisher Information non-private:")
     print([a[0] for a in results_fisher_np])
-    print("\n")
-    # print("Fisher Information corrected:")
-    # print([a[0] for a in results_fisher_corr])
-    # print("\n")
     
     #save results
 
@@ -664,11 +650,6 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
     output['upperfailures_FISHERNP'] = list_upper_failures_fisher_np
     output['lowerfailures_FISHERNP'] = list_lower_failures_fisher_np
     output['widths_FISHERNP'] = widths_FI_np
-    
-    #name_suffix = distribution + '_' + 'N'+str(N) + '_' + 'epsilon'+str(noise_scale) + '_' + mode + '_clampT_' + str(cliphi) +  '_FISHERCORR.npy'
-    #np.save('results_' + name_suffix, results_fisher_corr)
-    #np.save('upperfailures_' + name_suffix, list_upper_failures_fisher_corr)
-    #np.save('lowerfailures_' + name_suffix, list_lower_failures_fisher_corr)
 
     with open(name_suffix + '.pickle', 'wb') as handle:
         pickle.dump(output, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -676,6 +657,8 @@ def CIs(distribution, theta_vector, N, B, noise_scale, mode, T, cliplo, cliphi, 
     with open(name_suffix + '.pickle', 'rb') as handle:
         b = pickle.load(handle)
         print(b)
+    
+    print("output:", output)
 
     
 if __name__ == "__main__":
